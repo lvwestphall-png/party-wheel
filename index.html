@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Party Wheel</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #121212; color: white; margin: 0; overflow: hidden; }
+        canvas { max-width: 90vw; max-height: 90vw; margin-top: 20px; }
+        #spin { margin-top: 20px; padding: 15px 40px; font-size: 20px; cursor: pointer; background: #ff4757; color: white; border: none; border-radius: 50px; font-weight: bold; }
+        #result { margin-top: 20px; font-size: 24px; font-weight: bold; color: #f1c40f; min-height: 30px; }
+    </style>
+</head>
+<body>
+    <div id="result">SPIN THE WHEEL!</div>
+    <canvas id="canvas" width="500" height="500"></canvas><br>
+    <button id="spin">SPIN</button>
+
+    <script>
+        const tasks = ["GIVE 2 SHOTS", "TAKE A SHOT", "DANCE 30s", "FREE PASS", "PICK A VICTIM", "DRINK WATER", "HUG A HOMIE", "SING A SONG"];
+        const colors = ["#f1c40f", "#e67e22", "#e74c3c", "#9b59b6", "#2980b9", "#27ae60", "#1abc9c", "#f39c12"];
+        
+        let startAngle = 0;
+        let arc = Math.PI / (tasks.length / 2);
+        let spinTimeout = null;
+        let spinAngleStart = 10;
+        let spinTime = 0;
+        let spinTimeTotal = 0;
+        let ctx;
+
+        function drawWheel() {
+            const canvas = document.getElementById("canvas");
+            if (canvas.getContext) {
+                ctx = canvas.getContext("2d");
+                ctx.clearRect(0,0,500,500);
+                for(let i = 0; i < tasks.length; i++) {
+                    let angle = startAngle + i * arc;
+                    ctx.fillStyle = colors[i];
+                    ctx.beginPath();
+                    ctx.arc(250, 250, 200, angle, angle + arc, false);
+                    ctx.lineTo(250, 250);
+                    ctx.fill();
+                    ctx.save();
+                    ctx.fillStyle = "white";
+                    ctx.translate(250 + Math.cos(angle + arc / 2) * 140, 250 + Math.sin(angle + arc / 2) * 140);
+                    ctx.rotate(angle + arc / 2 + Math.PI / 2);
+                    ctx.fillText(tasks[i], -ctx.measureText(tasks[i]).width / 2, 0);
+                    ctx.restore();
+                }
+                // Arrow
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.moveTo(250 - 4, 250 - 204);
+                ctx.lineTo(250 + 4, 250 - 204);
+                ctx.lineTo(250 + 4, 250 - 184);
+                ctx.lineTo(250 + 9, 250 - 184);
+                ctx.lineTo(250 + 0, 250 - 174);
+                ctx.lineTo(250 - 9, 250 - 184);
+                ctx.lineTo(250 - 4, 250 - 184);
+                ctx.lineTo(250 - 4, 250 - 204);
+                ctx.fill();
+            }
+        }
+
+        function rotateWheel() {
+            spinTime += 30;
+            if(spinTime >= spinTimeTotal) { stopRotateWheel(); return; }
+            let spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+            startAngle += (spinAngle * Math.PI / 180);
+            drawWheel();
+            spinTimeout = setTimeout(rotateWheel, 30);
+        }
+
+        function stopRotateWheel() {
+            clearTimeout(spinTimeout);
+            let degrees = startAngle * 180 / Math.PI + 90;
+            let arcd = arc * 180 / Math.PI;
+            let index = Math.floor((360 - degrees % 360) / arcd);
+            document.getElementById("result").innerHTML = tasks[index];
+        }
+
+        function easeOut(t, b, c, d) {
+            let ts = (t /= d) * t;
+            let tc = ts * t;
+            return b + c * (tc + -3 * ts + 3 * t);
+        }
+
+        document.getElementById("spin").addEventListener("click", () => {
+            spinAngleStart = Math.random() * 10 + 10;
+            spinTime = 0;
+            spinTimeTotal = Math.random() * 3 + 4 * 1000;
+            rotateWheel();
+        });
+
+        drawWheel();
+    </script>
+</body>
+</html>
