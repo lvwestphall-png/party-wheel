@@ -6,16 +6,13 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body { font-family: 'Helvetica Neue', sans-serif; text-align: center; background: #fb8c00; background: radial-gradient(circle, #ff9800, #ef6c00, #222); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        canvas { max-width: 85vw; max-height: 85vw; filter: drop-shadow(0 0 30px rgba(0,0,0,0.6)); border-radius: 50%; }
+        canvas { max-width: 90vw; max-height: 90vw; filter: drop-shadow(0 0 30px rgba(0,0,0,0.6)); border-radius: 50%; }
         #spin { margin-top: 30px; padding: 20px 60px; font-size: 24px; cursor: pointer; background: #fff; color: #ef6c00; border: none; border-radius: 50px; font-weight: 900; box-shadow: 0 8px 25px rgba(0,0,0,0.3); transition: 0.2s; text-transform: uppercase; letter-spacing: 2px; -webkit-tap-highlight-color: transparent; }
         #spin:active { transform: scale(0.9); }
-        
-        /* Modal Style */
         #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         #modal-content { background: #fff; color: #333; padding: 40px; border-radius: 40px; width: 85%; max-width: 450px; border: 8px solid #ff9800; animation: popIn 0.5s cubic-bezier(0.26, 0.53, 0.74, 1.48); text-align: center; }
         #modal-task { font-size: 38px; font-weight: 900; margin: 20px 0; color: #e65100; text-transform: uppercase; line-height: 1.2; }
         #close-modal { padding: 15px 40px; background: #e65100; color: white; border-radius: 30px; border: none; font-size: 18px; font-weight: bold; cursor: pointer; }
-        
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
     </style>
 </head>
@@ -34,8 +31,8 @@
     </div>
 
     <script>
-        // ADD YOUR EMOJIS HERE IN THE TASKS
-        const tasks = ["2 SHOTS 🥃", "FREE HUG 🫂", "DANCE OFF 🕺", "DRINK WATER 💧", "TAKE A SHOT 🍺", "KING'S PASS 👑", "PICK A VICTIM 🎯", "SING LOUD 🎤"];
+        // Cleaned up tasks to be shorter
+        const tasks = ["2 SHOTS 🥃", "FREE HUG 🫂", "DANCE! 🕺", "WATER 💧", "TAKE SHOT 🍺", "KING'S PASS 👑", "VICTIM 🎯", "SING! 🎤"];
         const colors = ["#FF6D00", "#FF8008", "#FFA000", "#FFB300", "#FF6D00", "#FF8008", "#FFA000", "#FFB300"];
         
         let startAngle = 0;
@@ -50,28 +47,33 @@
             const canvas = document.getElementById("canvas");
             ctx = canvas.getContext("2d");
             ctx.clearRect(0,0,500,500);
-            ctx.strokeStyle = "rgba(255,255,255,0.4)";
-            ctx.lineWidth = 4;
+            
             for(let i = 0; i < tasks.length; i++) {
                 let angle = startAngle + i * arc;
                 ctx.fillStyle = colors[i];
                 ctx.beginPath();
-                ctx.arc(250, 250, 220, angle, angle + arc, false);
+                ctx.arc(250, 250, 230, angle, angle + arc, false);
                 ctx.lineTo(250, 250);
                 ctx.fill();
-                ctx.stroke();
+                
                 ctx.save();
                 ctx.fillStyle = "white";
-                ctx.font = 'bold 20px Arial';
-                ctx.translate(250 + Math.cos(angle + arc / 2) * 150, 250 + Math.sin(angle + arc / 2) * 150);
+                // Smaller font and moved further out (160 instead of 140)
+                ctx.font = 'bold 16px Arial'; 
+                ctx.translate(250 + Math.cos(angle + arc / 2) * 160, 250 + Math.sin(angle + arc / 2) * 160);
                 ctx.rotate(angle + arc / 2 + Math.PI / 2);
+                
+                // This splits the text into two lines if it's too long, 
+                // but for now we'll just keep it short and clean.
                 ctx.fillText(tasks[i], -ctx.measureText(tasks[i]).width / 2, 0);
                 ctx.restore();
             }
             
             // The Pointer - Crown Emoji
             ctx.font = '50px serif';
-            ctx.fillText('👑', 225, 270);
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText('👑', 250, 250); // Centered perfectly
         }
 
         function rotateWheel() {
@@ -89,7 +91,6 @@
             let arcd = arc * 180 / Math.PI;
             let index = Math.floor((360 - degrees % 360) / arcd);
             
-            // ORANGE & WHITE CONFETTI
             confetti({
                 particleCount: 200,
                 spread: 100,
