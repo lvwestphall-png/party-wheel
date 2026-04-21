@@ -1,133 +1,307 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>King's Day Wheel 👑</title>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        body { font-family: 'Helvetica Neue', sans-serif; text-align: center; background: #fb8c00; background: radial-gradient(circle, #ff9800, #ef6c00, #222); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        #canvas-container { position: relative; display: inline-block; }
-        canvas { max-width: 90vw; max-height: 90vw; filter: drop-shadow(0 0 30px rgba(0,0,0,0.6)); border-radius: 50%; }
-        
-        /* The Actual Pointer Arrow */
-        #pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 30px solid white; z-index: 5; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); }
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>King's Day Drink Wheel</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    min-height: 100vh;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #BF360C 0%, #E64A19 30%, #FF6D00 70%, #FF8F00 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    color: #fff;
+  }
+  .header { text-align: center; margin-bottom: 16px; }
+  .header h1 {
+    font-size: clamp(20px, 5vw, 36px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  .header p { font-size: clamp(11px, 3vw, 14px); opacity: 0.8; margin-top: 4px; letter-spacing: 1px; }
 
-        #spin { margin-top: 30px; padding: 20px 60px; font-size: 24px; cursor: pointer; background: #fff; color: #ef6c00; border: none; border-radius: 50px; font-weight: 900; box-shadow: 0 8px 25px rgba(0,0,0,0.3); transition: 0.2s; text-transform: uppercase; -webkit-tap-highlight-color: transparent; }
-        #spin:active { transform: scale(0.9); }
-        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        #modal-content { background: #fff; color: #333; padding: 40px; border-radius: 40px; width: 85%; max-width: 400px; border: 8px solid #ff9800; text-align: center; }
-        #modal-task { font-size: 40px; font-weight: 900; margin: 20px 0; color: #e65100; text-transform: uppercase; }
-        #close-modal { padding: 15px 40px; background: #e65100; color: white; border-radius: 30px; border: none; font-size: 18px; font-weight: bold; }
-    </style>
+  .wheel-wrap {
+    position: relative;
+    width: min(80vw, 420px);
+    height: min(80vw, 420px);
+    margin: 0 auto 24px;
+    flex-shrink: 0;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 0 0 5px rgba(255,255,255,0.15), 0 8px 40px rgba(0,0,0,0.4);
+  }
+  .pointer {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-top: 30px solid #fff;
+    z-index: 5;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+  }
+
+  #spin-btn {
+    display: block;
+    padding: 15px 50px;
+    font-size: clamp(15px, 4vw, 20px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: #fff;
+    color: #E64A19;
+    border: none;
+    border-radius: 60px;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.12s;
+  }
+  #spin-btn:active { transform: scale(0.93); }
+  #spin-btn:disabled { opacity: 0.45; cursor: default; }
+
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.72);
+    z-index: 20;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 24px;
+    padding: 32px 28px;
+    max-width: 320px;
+    width: 88%;
+    text-align: center;
+    border: 4px solid #FF6D00;
+  }
+  .modal-crown { font-size: 36px; margin-bottom: 6px; }
+  .modal-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #FF6D00;
+    margin-bottom: 10px;
+  }
+  .modal-task {
+    font-size: clamp(24px, 6vw, 34px);
+    font-weight: 900;
+    color: #BF360C;
+    text-transform: uppercase;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+  .modal-sub {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .modal-close {
+    display: inline-block;
+    padding: 13px 34px;
+    background: #E64A19;
+    color: #ffffff;
+    border: none;
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
 </head>
 <body>
 
-    <h1 style="margin-bottom:20px; text-shadow: 2px 2px 10px rgba(0,0,0,0.5);">PROOST! 🍻</h1>
-    
-    <div id="canvas-container">
-        <div id="pointer"></div>
-        <canvas id="canvas" width="500" height="500"></canvas>
-    </div>
+<div class="header">
+  <h1>👑 King's Day 👑</h1>
+  <p>Spin the wheel — drink your fate</p>
+</div>
 
-    <button id="spin">GO ORANGE 👑</button>
+<div class="wheel-wrap">
+  <div class="pointer"></div>
+  <canvas id="wheel" width="500" height="500"></canvas>
+</div>
 
-    <div id="modal">
-        <div id="modal-content">
-            <p style="margin:0; font-weight:bold; color:#f57c00;">👑 THE ROYAL DECREE 👑</p>
-            <div id="modal-task"></div>
-            <button id="close-modal">NEXT LEGEND</button>
-        </div>
-    </div>
+<button id="spin-btn">Spin 🍊</button>
 
-    <script>
-        const tasks = ["2 SHOTS 🥃", "FREE HUG 🫂", "DANCE! 🕺", "WATER 💧", "TAKE SHOT 🍺", "KING'S PASS 👑", "VICTIM 🎯", "SING! 🎤"];
-        const colors = ["#FF6D00", "#FF8008", "#FFA000", "#FFB300", "#FF6D00", "#FF8008", "#FFA000", "#FFB300"];
-        
-        let startAngle = 0;
-        let arc = Math.PI / (tasks.length / 2);
-        let spinTimeout = null;
-        let spinAngleStart = 10;
-        let spinTime = 0;
-        let spinTimeTotal = 0;
-        let ctx;
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-crown">👑</div>
+    <div class="modal-label">Royal Decree</div>
+    <div class="modal-task" id="modal-task"></div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <button class="modal-close" id="modal-close">Next!</button>
+  </div>
+</div>
 
-        function drawWheel() {
-            const canvas = document.getElementById("canvas");
-            ctx = canvas.getContext("2d");
-            ctx.clearRect(0,0,500,500);
-            
-            for(let i = 0; i < tasks.length; i++) {
-                let angle = startAngle + i * arc;
-                ctx.fillStyle = colors[i];
-                ctx.beginPath();
-                ctx.arc(250, 250, 230, angle, angle + arc, false);
-                ctx.lineTo(250, 250);
-                ctx.fill();
-                
-                ctx.save();
-                ctx.fillStyle = "white";
-                ctx.font = 'bold 18px Arial';
-                ctx.translate(250 + Math.cos(angle + arc / 2) * 170, 250 + Math.sin(angle + arc / 2) * 170);
-                
-                // This rotation makes the text "tangent" to the circle so it's easier to read
-                ctx.rotate(angle + arc / 2 + Math.PI / 2);
-                ctx.fillText(tasks[i], -ctx.measureText(tasks[i]).width / 2, 0);
-                ctx.restore();
-            }
-            
-            // Center Crown
-            ctx.font = '50px serif';
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText('👑', 250, 250);
-        }
+<script>
+const tasks = [
+  { label: "Take a shot",  sub: "Down it — no excuses." },
+  { label: "Give 2 sips",  sub: "Pick who suffers." },
+  { label: "Waterfall!",   sub: "Everyone drinks. You start, they stop when you stop." },
+  { label: "Finish it",    sub: "Down your whole drink." },
+  { label: "Give a shot",  sub: "Pour someone a shot of your choice." },
+  { label: "Free pass",    sub: "Lucky you — no drink this round." },
+  { label: "New round",    sub: "Everyone grabs a fresh drink." },
+  { label: "Split shot",   sub: "Split a shot between two people you pick." },
+  { label: "Drink twice",  sub: "Whoever spun drinks twice." },
+  { label: "Pick a pal",   sub: "Choose someone — they drink with you." },
+];
 
-        function rotateWheel() {
-            spinTime += 30;
-            if(spinTime >= spinTimeTotal) { stopRotateWheel(); return; }
-            let spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
-            startAngle += (spinAngle * Math.PI / 180);
-            drawWheel();
-            spinTimeout = setTimeout(rotateWheel, 30);
-        }
+const palette = [
+  "#E64A19","#FF6D00","#FF8F00","#BF360C",
+  "#D84315","#F4511E","#FF7043","#E65100",
+  "#FFAB40","#FF6E40"
+];
 
-        function stopRotateWheel() {
-            clearTimeout(spinTimeout);
-            // Calculation for the top-center pointer
-            let degrees = startAngle * 180 / Math.PI + 90;
-            let arcd = arc * 180 / Math.PI;
-            let index = Math.floor((360 - degrees % 360) / arcd);
-            
-            confetti({
-                particleCount: 200, spread: 100, origin: { y: 0.6 },
-                colors: ['#FF8C00', '#ffffff', '#FF4500']
-            });
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const N = tasks.length;
+const arc = (2 * Math.PI) / N;
+let startAngle = 0;
+let spinning = false;
+let spinTimeout = null;
+let spinAngleStart = 0, spinTime = 0, spinTimeTotal = 0;
 
-            setTimeout(() => {
-                document.getElementById("modal-task").innerHTML = tasks[index];
-                document.getElementById("modal").style.display = "flex";
-            }, 600);
-        }
+function fitText(text, maxW, startSize) {
+  let size = startSize;
+  ctx.font = `bold ${size}px Arial`;
+  while (ctx.measureText(text).width > maxW && size > 7) {
+    size--;
+    ctx.font = `bold ${size}px Arial`;
+  }
+  return size;
+}
 
-        function easeOut(t, b, c, d) {
-            let ts = (t /= d) * t;
-            let tc = ts * t;
-            return b + c * (tc + -3 * ts + 3 * t);
-        }
+function drawWheel() {
+  const W = canvas.width, cx = W / 2, cy = W / 2, r = W / 2 - 10;
+  ctx.clearRect(0, 0, W, W);
 
-        document.getElementById("spin").addEventListener("click", () => {
-            document.getElementById("modal").style.display = "none";
-            spinAngleStart = Math.random() * 10 + 25;
-            spinTime = 0;
-            spinTimeTotal = Math.random() * 3000 + 4000;
-            rotateWheel();
-        });
+  for (let i = 0; i < N; i++) {
+    const a0 = startAngle + i * arc;
+    const a1 = a0 + arc;
+    const aMid = a0 + arc / 2;
 
-        document.getElementById("close-modal").addEventListener("click", () => {
-            document.getElementById("modal").style.display = "none";
-        });
+    ctx.fillStyle = palette[i % palette.length];
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, a0, a1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
-        drawWheel();
-    </script>
+    const tx = cx + Math.cos(aMid) * r * 0.57;
+    const ty = cy + Math.sin(aMid) * r * 0.57;
+    const maxW = r * 0.58;
+
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(aMid + Math.PI / 2);
+    ctx.fillStyle = "rgba(255,255,255,0.97)";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const words = tasks[i].label.split(" ");
+    const singleSize = fitText(tasks[i].label, maxW, 13);
+    if (singleSize >= 10) {
+      ctx.fillText(tasks[i].label, 0, 0);
+    } else {
+      const mid = Math.ceil(words.length / 2);
+      const l1 = words.slice(0, mid).join(" ");
+      const l2 = words.slice(mid).join(" ");
+      const s1 = fitText(l1, maxW, 13);
+      const s2 = fitText(l2, maxW, 13);
+      const sz = Math.min(s1, s2);
+      ctx.font = `bold ${sz}px Arial`;
+      const lh = sz * 1.2;
+      ctx.fillText(l1, 0, -lh / 2);
+      ctx.fillText(l2, 0,  lh / 2);
+    }
+    ctx.restore();
+  }
+
+  // center dot only — no circle outline
+  ctx.beginPath();
+  ctx.arc(cx, cy, 22, 0, 2 * Math.PI);
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+  ctx.font = "18px serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("👑", cx, cy);
+}
+
+function easeOut(t, b, c, d) {
+  const ts = (t /= d) * t, tc = ts * t;
+  return b + c * (tc - 3 * ts + 3 * t);
+}
+
+function rotate() {
+  spinTime += 30;
+  if (spinTime >= spinTimeTotal) { stop(); return; }
+  const angle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+  startAngle += angle * Math.PI / 180;
+  drawWheel();
+  spinTimeout = setTimeout(rotate, 30);
+}
+
+function stop() {
+  clearTimeout(spinTimeout);
+  spinning = false;
+  document.getElementById("spin-btn").disabled = false;
+
+  const deg = (startAngle * 180 / Math.PI + 90) % 360;
+  const idx = Math.floor(((360 - deg) % 360) / (360 / N)) % N;
+
+  confetti({ particleCount: 160, spread: 80, origin: { y: 0.5 }, colors: ["#FF6D00","#fff","#FF8F00","#BF360C"] });
+
+  setTimeout(() => {
+    document.getElementById("modal-task").textContent = tasks[idx].label;
+    document.getElementById("modal-sub").textContent = tasks[idx].sub;
+    document.getElementById("modal").classList.add("open");
+  }, 500);
+}
+
+document.getElementById("spin-btn").addEventListener("click", () => {
+  if (spinning) return;
+  spinning = true;
+  document.getElementById("spin-btn").disabled = true;
+  document.getElementById("modal").classList.remove("open");
+  spinAngleStart = Math.random() * 10 + 22;
+  spinTime = 0;
+  spinTimeTotal = Math.random() * 3000 + 5000;
+  rotate();
+});
+
+document.getElementById("modal-close").addEventListener("click", () => {
+  document.getElementById("modal").classList.remove("open");
+});
+
+drawWheel();
+</script>
 </body>
 </html>
